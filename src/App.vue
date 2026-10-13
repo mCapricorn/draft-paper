@@ -1,20 +1,9 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { ref } from 'vue'
 import WhiteboardView from './components/WhiteboardView.vue'
 
-const boardName = ref('Shared Draft')
+const boardName = ref('Draft Paper')
 const performanceMode = ref('balanced')
-
-const repoUrl = computed(() => 'https://github.com/mCapricorn/shared-whiteboard')
-
-async function copyShareLink() {
-  try {
-    await navigator.clipboard.writeText(repoUrl.value)
-    window.alert('分享链接已复制到剪贴板')
-  } catch (error) {
-    window.alert('复制失败，请手动复制：' + repoUrl.value)
-  }
-}
 </script>
 
 <template>
@@ -33,7 +22,6 @@ async function copyShareLink() {
             <option value="high">高性能</option>
           </select>
         </label>
-        <button class="share-btn" @click="copyShareLink">复制分享链接</button>
       </div>
     </header>
 
