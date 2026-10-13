@@ -2,77 +2,77 @@
   <div class="whiteboard-root">
     <!-- Debug toggle button (fixed top-left) -->
     <button @click="toggleDebugPanel"
-            title="调试设置"
+            :title="ui.debugSettings"
             style="position:fixed; left:8px; top:8px; z-index:1000; padding:6px 10px; border-radius:8px; border:1px solid rgba(0,0,0,0.14); background:rgba(255,255,255,0.75); backdrop-filter: blur(6px); box-shadow:0 2px 10px rgba(0,0,0,0.10); cursor:pointer; color:#111827;">
       Debug
     </button>
     <!-- Debug panel -->
     <div v-if="debugOpen" style="position:fixed; left:8px; top:44px; z-index:1000; width:320px; max-height:80vh; overflow:auto; padding:12px; border-radius:12px; border:1px solid rgba(0,0,0,0.16); background:rgba(255,255,255,0.72); backdrop-filter: blur(8px); box-shadow:0 8px 24px rgba(0,0,0,0.14); color:#111827;">
-      <div style="font-weight:700; margin-bottom:8px;">调试设置</div>
+      <div style="font-weight:700; margin-bottom:8px;">{{ ui.debugSettings }}</div>
       <div class="dbg-row" style="gap:8px; margin-bottom:10px; display:flex;">
-        <button @click="saveDebugPreset" style="flex:1; padding:6px 8px; border-radius:8px; border:1px solid rgba(0,0,0,0.14); background:rgba(16,185,129,0.12); color:#065f46; cursor:pointer;">保存预设</button>
-        <button @click="loadDebugPreset" style="flex:1; padding:6px 8px; border-radius:8px; border:1px solid rgba(0,0,0,0.14); background:rgba(59,130,246,0.12); color:#1e3a8a; cursor:pointer;">恢复预设</button>
+        <button @click="saveDebugPreset" style="flex:1; padding:6px 8px; border-radius:8px; border:1px solid rgba(0,0,0,0.14); background:rgba(16,185,129,0.12); color:#065f46; cursor:pointer;">{{ ui.savePreset }}</button>
+        <button @click="loadDebugPreset" style="flex:1; padding:6px 8px; border-radius:8px; border:1px solid rgba(0,0,0,0.14); background:rgba(59,130,246,0.12); color:#1e3a8a; cursor:pointer;">{{ ui.loadPreset }}</button>
       </div>
-      <div style="font-size:12px; color:#374151; margin-bottom:6px; opacity:0.8;">形状识别</div>
+      <div style="font-size:12px; color:#374151; margin-bottom:6px; opacity:0.8;">{{ ui.shapeRecognition }}</div>
       <div class="dbg-row">
-        <label>简化比例 (diag×)</label>
+        <label>{{ ui.simplifyScale }}</label>
         <input type="range" min="0.008" max="0.040" step="0.001" v-model.number="dbg.simplifyScale"/>
         <span class="dbg-val">{{dbg.simplifyScale.toFixed(3)}}</span>
       </div>
       <div class="dbg-row">
-        <label>简化像素下限</label>
+        <label>{{ ui.minSimplifyPx }}</label>
         <input type="range" min="0" max="10" step="1" v-model.number="dbg.minSimplifyPx"/>
         <span class="dbg-val">{{dbg.minSimplifyPx}}</span>
       </div>
       <div class="dbg-row">
-        <label>简化像素上限</label>
+        <label>{{ ui.maxSimplifyPx }}</label>
         <input type="range" min="2" max="20" step="1" v-model.number="dbg.maxSimplifyPx"/>
         <span class="dbg-val">{{dbg.maxSimplifyPx}}</span>
       </div>
       <div class="dbg-row">
-        <label>角点最小段比</label>
+        <label>{{ ui.cornerMinSegRatio }}</label>
         <input type="range" min="0.005" max="0.060" step="0.001" v-model.number="dbg.cornerMinSegRatio"/>
         <span class="dbg-val">{{(dbg.cornerMinSegRatio*100).toFixed(1)}}%</span>
       </div>
       <div class="dbg-row">
-        <label>角点阈值 (°)</label>
+        <label>{{ ui.cornerAngleDeg }}</label>
         <input type="range" min="10" max="60" step="1" v-model.number="dbg.cornerAngleDeg"/>
         <span class="dbg-val">{{dbg.cornerAngleDeg}}°</span>
       </div>
       <div class="dbg-row">
-        <label>直线化剔除 (°)</label>
+        <label>{{ ui.pruneAngleDeg }}</label>
         <input type="range" min="3" max="20" step="1" v-model.number="dbg.pruneAngleDeg"/>
         <span class="dbg-val">{{dbg.pruneAngleDeg}}°</span>
       </div>
       <div class="dbg-row">
-        <label>闭合阈值 (diag×)</label>
+        <label>{{ ui.closedThreshRatio }}</label>
         <input type="range" min="0.03" max="0.12" step="0.005" v-model.number="dbg.closedThreshRatio"/>
         <span class="dbg-val">{{(dbg.closedThreshRatio*100).toFixed(1)}}%</span>
       </div>
       <div class="dbg-row">
-        <label>直线偏差阈值 (diag×)</label>
+        <label>{{ ui.lineDeviationRatio }}</label>
         <input type="range" min="0.005" max="0.040" step="0.001" v-model.number="dbg.lineDeviationRatio"/>
         <span class="dbg-val">{{(dbg.lineDeviationRatio*100).toFixed(1)}}%</span>
       </div>
-      <div style="font-size:12px; color:#374151; margin:10px 0 6px; opacity:0.8;">接缝软化</div>
+      <div style="font-size:12px; color:#374151; margin:10px 0 6px; opacity:0.8;">{{ ui.seamSoftening }}</div>
       <div class="dbg-row">
-        <label>模糊半径 (px)</label>
+        <label>{{ ui.seamBlurPx }}</label>
         <input type="range" min="0" max="2" step="0.05" v-model.number="dbg.seamBlurPx"/>
         <span class="dbg-val">{{dbg.seamBlurPx.toFixed(2)}}px</span>
       </div>
       <div class="dbg-row">
-        <label>模糊透明度</label>
+        <label>{{ ui.seamBlurAlpha }}</label>
         <input type="range" min="0" max="1" step="0.05" v-model.number="dbg.seamBlurAlpha"/>
         <span class="dbg-val">{{dbg.seamBlurAlpha.toFixed(2)}}</span>
       </div>
       <div class="dbg-row">
-        <label>接缝点半径×笔粗</label>
+        <label>{{ ui.seamDotScale }}</label>
         <input type="range" min="0.2" max="1.2" step="0.05" v-model.number="dbg.seamDotScale"/>
         <span class="dbg-val">×{{dbg.seamDotScale.toFixed(2)}}</span>
       </div>
     </div>
     <aside class="wb-left" :style="leftStyle">
-      <button class="wb-btn" :class="{active: panMode}" @click="togglePanMode" @mouseenter="onPanHover(true)" @mouseleave="onPanHover(false)" title="手型：拖动画布（按住滚轮也可拖动）">
+      <button class="wb-btn" :class="{active: panMode}" @click="togglePanMode" @mouseenter="onPanHover(true)" @mouseleave="onPanHover(false)" :title="ui.panTool">
         <!-- open hand icon -->
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M7 11V6a2 2 0 0 1 4 0v5"/>
@@ -80,7 +80,7 @@
           <path d="M15 11V7a2 2 0 0 1 4 0v7a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5v-3"/>
         </svg>
       </button>
-      <button class="wb-btn" @click="zoomIn" title="放大">
+      <button class="wb-btn" @click="zoomIn" :title="ui.zoomIn">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="6"/>
           <path d="M11 8v6"/>
@@ -88,14 +88,14 @@
           <path d="M21 21l-4.35-4.35"/>
         </svg>
       </button>
-      <button class="wb-btn" @click="zoomOut" title="缩小">
+      <button class="wb-btn" @click="zoomOut" :title="ui.zoomOut">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="11" cy="11" r="6"/>
           <path d="M8 11h6"/>
           <path d="M21 21l-4.35-4.35"/>
         </svg>
       </button>
-      <button class="wb-btn" @click="fitToView" title="看全（使整幅画布完全显示）">
+      <button class="wb-btn" @click="fitToView" :title="ui.fitToView">
         <!-- fit-to-view icon: frame with corners -->
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M3 9V5a2 2 0 0 1 2-2h4"/>
@@ -105,7 +105,7 @@
           <rect x="7.5" y="7.5" width="9" height="9" rx="1"/>
         </svg>
       </button>
-      <button class="wb-btn" :class="{active: shapeSnapEnabled}" @click="toggleShapeSnap" :title="shapeSnapEnabled ? '形状优化：开' : '形状优化：关'">
+      <button class="wb-btn" :class="{active: shapeSnapEnabled}" @click="toggleShapeSnap" :title="shapeSnapEnabled ? ui.shapeSnapOn : ui.shapeSnapOff">
         <!-- magic-wand icon -->
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M15 9l-6 6"/>
@@ -117,9 +117,9 @@
           <path d="M4 20l6-6"/>
         </svg>
       </button>
-      <div class="rotate-vertical" title="旋转">
+      <div class="rotate-vertical" :title="ui.rotate">
         <!-- 上：顺时针 90° -->
-        <button class="wb-btn rotate-cw" @click.prevent="rotate90('cw')" title="顺时针 90°">
+        <button class="wb-btn rotate-cw" @click.prevent="rotate90('cw')" :title="ui.rotateCw90">
           <!-- clearer rotate-90-cw icon -->
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M7 11V7a4 4 0 0 1 4-4h4"/>
@@ -129,39 +129,39 @@
         </button>
         <!-- 下：慢速旋转（按住并滚轮） -->
         <div class="slow-rotate-wrap">
-            <button class="wb-btn rotate-slow" @mousedown.prevent="onRotateMouseDown('cw', $event)" @mouseup.prevent="onRotateMouseUp" @mouseenter="onSlowRotateHover(true)" @mouseleave="onSlowRotateHover(false)" title="慢速旋转（按住并滑动滚轮）">
+            <button class="wb-btn rotate-slow" @mousedown.prevent="onRotateMouseDown('cw', $event)" @mouseup.prevent="onRotateMouseUp" @mouseenter="onSlowRotateHover(true)" @mouseleave="onSlowRotateHover(false)" :title="ui.slowRotate">
             <!-- clearer slow-rotate icon with circular arrow -->
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 12a9 9 0 1 1-9-9"/>
               <path d="M15 3l3 3-3 3"/>
             </svg>
           </button>
-            <div class="rotate-hover-hint right" :class="{show: showRotateHoverHint}" :style="{ color: hintTextColor }">或在画布内按住右键滑动滚轮（以指针为圆心）</div>
+            <div class="rotate-hover-hint right" :class="{show: showRotateHoverHint}" :style="{ color: hintTextColor }">{{ ui.rotateHint }}</div>
         </div>
       </div>
 
       <div class="wb-sep"></div>
 
-      <div class="texture-wrap" title="画布材质">
-        <div class="texture-caption" :style="{ color: hintTextColor }">材质</div>
+      <div class="texture-wrap" :title="ui.texture">
+        <div class="texture-caption" :style="{ color: hintTextColor }">{{ ui.texture }}</div>
         <select class="texture-select" v-model="texture" @change="onTextureChange">
-          <option value="none">无</option>
-          <option value="grid">网格</option>
-          <option value="paper">纸张</option>
+          <option value="none">{{ ui.textureNone }}</option>
+          <option value="grid">{{ ui.textureGrid }}</option>
+          <option value="paper">{{ ui.texturePaper }}</option>
         </select>
       </div>
 
       <label class="wb-color">
         <!-- 画布颜色改为圆形选择按钮 -->
-        <input class="round-bg-color" type="color" v-model="bgColor" @input="onBgColorChange" title="画布颜色" />
+        <input class="round-bg-color" type="color" v-model="bgColor" @input="onBgColorChange" :title="ui.canvasColor" />
       </label>
         <div class="wb-color-palette">
           <!-- 护眼色下拉，与材质选择一致样式 -->
           <div class="eye-select-wrap">
             <!-- 护眼色使用与材质相同的选择框样式并加宽 -->
-            <select class="texture-select eye-select" v-model="_selectedEyeColor" @change="onEyeSelectChange" :title="'选择护眼色'">
-              <option value="">关|护眼</option>
-              <option v-for="(eCol, i) in eyeProtectColors" :key="'eoptL'+i" :value="eCol.hex">{{ eCol.name }}</option>
+            <select class="texture-select eye-select" v-model="_selectedEyeColor" @change="onEyeSelectChange" :title="ui.eyeProtect">
+              <option value="">{{ ui.eyeProtectOff }}</option>
+              <option v-for="(eCol, i) in localizedEyeProtectColors" :key="'eoptL'+i" :value="eCol.hex">{{ eCol.displayName }}</option>
             </select>
           </div>
         </div>
@@ -171,18 +171,18 @@
       <div class="wb-canvas-wrap" :style="canvasWrapStyle" ref="wrap">
   <canvas ref="canvas" class="wb-canvas" :width="viewW" :height="viewH"></canvas>
         <!-- top-right display fullscreen button -->
-        <button class="wb-exit-page-btn" @click="exitWhiteboard" title="退出稿纸，返回上页">
+        <button class="wb-exit-page-btn" @click="exitWhiteboard" :title="ui.exitBoard">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
             <path d="M10 17l-5-5 5-5"/>
             <path d="M5 12h12"/>
           </svg>
         </button>
-        <button class="wb-fullscreen-btn" @click="toggleDisplayFullscreen" :title="isDisplayFullscreen ? '退出全屏 (Esc)' : '在显示器全屏'">
+        <button class="wb-fullscreen-btn" @click="toggleDisplayFullscreen" :title="isDisplayFullscreen ? ui.exitFullscreen : ui.enterFullscreen">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9V3h6"/><path d="M21 15v6h-6"/></svg>
         </button>
         <!-- top-left exit when in fullscreen -->
-        <button v-if="isDisplayFullscreen" class="wb-exit-btn" @click="toggleDisplayFullscreen" title="退出全屏">
+        <button v-if="isDisplayFullscreen" class="wb-exit-btn" @click="toggleDisplayFullscreen" :title="ui.exitFullscreenShort">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H3v6"/><path d="M15 21h6v-6"/><path d="M3 3l7 7"/><path d="M21 21l-7-7"/></svg>
         </button>
       </div>
@@ -192,17 +192,17 @@
     <div v-if="_hudVisible" class="wb-hud show">{{_hudMessage}}</div>
 
   <aside class="wb-right" :class="{ 'wb-right-wide': (pasteActive && pasteStroke && pasteStroke.type==='text') }" :style="rightStyle">
-  <button class="wb-btn" @click="undo" title="撤销 (Ctrl+Z)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17L4 12l5-5"/><path d="M20 18a8 8 0 0 0-8-8H4"/></svg></button>
-  <button class="wb-btn" @click="redo" title="重做 (Ctrl+Shift+Z)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 17l5-5-5-5"/><path d="M4 18a8 8 0 0 1 8-8h8"/></svg></button>
-      <button class="wb-btn" @click="clearCanvas" title="清空"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+    <button class="wb-btn" @click="undo" :title="ui.undo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 17L4 12l5-5"/><path d="M20 18a8 8 0 0 0-8-8H4"/></svg></button>
+    <button class="wb-btn" @click="redo" :title="ui.redo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 17l5-5-5-5"/><path d="M4 18a8 8 0 0 1 8-8h8"/></svg></button>
+      <button class="wb-btn" @click="clearCanvas" :title="ui.clear"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
 
       <div class="wb-sep"></div>
 
-      <button class="wb-btn" @click="screenshot" title="截图">截图</button>
-      <label class="wb-btn" title="导入">
-        <input ref="importFileInput" class="hidden-file" type="file" accept=".zxkjbb,.json" @change="onImportFile"> 导入
+      <button class="wb-btn" @click="screenshot" :title="ui.screenshot">{{ ui.screenshot }}</button>
+      <label class="wb-btn" :title="ui.import">
+        <input ref="importFileInput" class="hidden-file" type="file" accept=".zxkjbb,.json" @change="onImportFile"> {{ ui.import }}
       </label>
-      <button class="wb-btn" @click="exportBoard" title="导出">导出</button>
+      <button class="wb-btn" @click="exportBoard" :title="ui.export">{{ ui.export }}</button>
 
       <div class="wb-sep"></div>
 
@@ -212,16 +212,16 @@
 
       <!-- 文本样式面板：仅在粘贴文本预览时显示 -->
       <div v-if="pasteActive && pasteStroke && pasteStroke.type==='text'" class="text-style-panel">
-        <div class="panel-title">文本样式</div>
+        <div class="panel-title">{{ ui.textStyle }}</div>
         <div class="row">
-          <label>字体</label>
+          <label>{{ ui.font }}</label>
           <select v-model="pasteStroke.fontFamily" @change="onTextStyleChange">
-            <option value="sans-serif">无衬线（Sans-Serif）</option>
-            <option value="serif">衬线（Serif）</option>
-            <option value="monospace">等宽（Monospace）</option>
+            <option value="sans-serif">{{ ui.sansSerif }}</option>
+            <option value="serif">{{ ui.serif }}</option>
+            <option value="monospace">{{ ui.monospace }}</option>
             <option value="'Segoe UI', Arial, sans-serif">Segoe UI</option>
             <option value="Arial, Helvetica, sans-serif">Arial</option>
-            <option value="'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Heiti SC', sans-serif">中文黑体/苹方/雅黑</option>
+            <option value="'Microsoft YaHei', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Heiti SC', sans-serif">{{ ui.chineseSans }}</option>
             <option value="'Times New Roman', Times, serif">Times New Roman</option>
             <option value="Georgia, serif">Georgia</option>
             <option value="'Courier New', Courier, monospace">Courier New</option>
@@ -230,72 +230,72 @@
           </select>
         </div>
         <div class="row">
-          <label>粗细</label>
+          <label>{{ ui.fontWeight }}</label>
           <select v-model="pasteStroke.fontWeight" @change="onTextStyleChange">
-            <option value="normal">正常</option>
-            <option value="bold">加粗</option>
+            <option value="normal">{{ ui.normal }}</option>
+            <option value="bold">{{ ui.bold }}</option>
           </select>
         </div>
         <div class="row">
-          <label>字号</label>
+          <label>{{ ui.fontSize }}</label>
           <input type="range" min="8" max="160" step="1" v-model.number="pasteStroke.baseSize" @input="onTextStyleChange" />
           <span class="val">{{ pasteStroke.baseSize }}px</span>
         </div>
         <div class="row">
-          <label>对齐</label>
+          <label>{{ ui.align }}</label>
           <div class="align-group">
-            <button type="button" :class="{active: pasteStroke.align==='left'}" @click="pasteStroke.align='left'; onTextStyleChange()">左</button>
-            <button type="button" :class="{active: pasteStroke.align==='center'}" @click="pasteStroke.align='center'; onTextStyleChange()">中</button>
-            <button type="button" :class="{active: pasteStroke.align==='right'}" @click="pasteStroke.align='right'; onTextStyleChange()">右</button>
+            <button type="button" :class="{active: pasteStroke.align==='left'}" @click="pasteStroke.align='left'; onTextStyleChange()">{{ ui.alignLeft }}</button>
+            <button type="button" :class="{active: pasteStroke.align==='center'}" @click="pasteStroke.align='center'; onTextStyleChange()">{{ ui.alignCenter }}</button>
+            <button type="button" :class="{active: pasteStroke.align==='right'}" @click="pasteStroke.align='right'; onTextStyleChange()">{{ ui.alignRight }}</button>
           </div>
         </div>
         <div class="row">
-          <label>填满框</label>
+          <label>{{ ui.fillBox }}</label>
           <input type="checkbox" v-model="pasteStroke.fillBox" @change="onTextStyleChange" />
         </div>
         <div class="row">
-          <label>文字</label>
+          <label>{{ ui.textColor }}</label>
           <input type="color" v-model="pasteStroke.color" @input="onTextStyleChange" />
         </div>
         <div class="row">
-          <label>背景</label>
+          <label>{{ ui.background }}</label>
           <input type="color" v-model="pasteStroke.bgColor" @input="onTextStyleChange" />
         </div>
         <div class="row">
-          <label>描边色</label>
+          <label>{{ ui.strokeColor }}</label>
           <input type="color" v-model="pasteStroke.textStrokeColor" @input="onTextStyleChange" />
         </div>
         <div class="row">
-          <label>描边宽</label>
+          <label>{{ ui.strokeWidth }}</label>
           <input type="range" min="0" max="6" step="0.5" v-model.number="pasteStroke.textStrokeWidth" @input="onTextStyleChange" />
           <span class="val">{{ (pasteStroke.textStrokeWidth||0).toFixed(1) }}px</span>
         </div>
         <div class="row">
-          <label>行距</label>
+          <label>{{ ui.lineHeight }}</label>
           <input type="range" min="0.8" max="2.4" step="0.05" v-model.number="pasteStroke.lineHeightMult" @input="onTextStyleChange" />
           <span class="val">×{{ (pasteStroke.lineHeightMult||1.2).toFixed(2) }}</span>
         </div>
         <div class="row">
-          <label>字距</label>
+          <label>{{ ui.letterSpacing }}</label>
           <input type="range" min="-2" max="20" step="0.5" v-model.number="pasteStroke.letterSpacing" @input="onTextStyleChange" />
           <span class="val">{{ (pasteStroke.letterSpacing||0).toFixed(1) }}px</span>
         </div>
         <div class="row">
-          <label>阴影</label>
+          <label>{{ ui.shadow }}</label>
           <input type="color" v-model="pasteStroke.textShadowColor" @input="onTextStyleChange" />
         </div>
         <div class="row">
-          <label>模糊</label>
+          <label>{{ ui.blur }}</label>
           <input type="range" min="0" max="20" step="0.5" v-model.number="pasteStroke.textShadowBlur" @input="onTextStyleChange" />
           <span class="val">{{ (pasteStroke.textShadowBlur||0).toFixed(1) }}px</span>
         </div>
         <div class="row">
-          <label>X偏移</label>
+          <label>{{ ui.offsetX }}</label>
           <input type="range" min="-40" max="40" step="1" v-model.number="pasteStroke.textShadowOffsetX" @input="onTextStyleChange" />
           <span class="val">{{ (pasteStroke.textShadowOffsetX||0).toFixed(0) }}px</span>
         </div>
         <div class="row">
-          <label>Y偏移</label>
+          <label>{{ ui.offsetY }}</label>
           <input type="range" min="-40" max="40" step="1" v-model.number="pasteStroke.textShadowOffsetY" @input="onTextStyleChange" />
           <span class="val">{{ (pasteStroke.textShadowOffsetY||0).toFixed(0) }}px</span>
         </div>
@@ -307,18 +307,18 @@
           <!-- 画笔区域：上方多个画笔按钮，下方画笔粗细 -->
           <div class="brush-group">
             <div class="brush-style">
-              <button :class="['tool', {active: brushStyle==='pen'}]" @click="selectBrush('pen')" title="画笔">
+              <button :class="['tool', {active: brushStyle==='pen'}]" @click="selectBrush('pen')" :title="ui.pen">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20l7-7-5-5-7 7v5z"/><path d="M14 8l2 2"/></svg>
               </button>
-              <button :class="['tool', {active: brushStyle==='marker'}]" @click="selectBrush('marker')" title="马克笔">
+              <button :class="['tool', {active: brushStyle==='marker'}]" @click="selectBrush('marker')" :title="ui.marker">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21l9-9 4 4-9 9H3v-4z"/><path d="M14 7l3 3"/></svg>
               </button>
-              <button :class="['tool', {active: brushStyle==='pencil'}]" @click="selectBrush('pencil')" title="铅笔">
+              <button :class="['tool', {active: brushStyle==='pencil'}]" @click="selectBrush('pencil')" :title="ui.pencil">
                 <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20l9-9-3-3-9 9v3z"/><path d="M18 5l1 1"/></svg>
               </button>
             </div>
             <div class="brush-size">
-                <input type="range" min="1" max="14" v-model.number="brushSize" title="按住CTRL+滑动滚轮调整大小" />
+                <input type="range" min="1" max="14" v-model.number="brushSize" :title="ui.brushSize" />
               <div class="size-ind" :style="{ color: hintTextColor }">{{brushSize}}</div>
             </div>
           </div>
@@ -335,20 +335,20 @@
 					@focus="onBrushPickerOpen"
 					@blur="onBrushPickerClose"
 					@input="onBrushColorChange"
-					title="画笔颜色"
+          :title="ui.brushColor"
 				/>
 				<div class="bw-group" style="margin-left:8px;">
 					<div style="display:flex; align-items:center; gap:8px;">
 						<div
 							class="swatch bw-swatch"
 							@click="setBrushColor('#000000')"
-							title="黑色"
+              :title="ui.black"
 							:style="{ background: '#000' }"
 						></div>
 						<div
 							class="swatch bw-swatch"
 							@click="setBrushColor('#ffffff')"
-							title="白色"
+              :title="ui.white"
 							:style="{ background: '#fff', border: '1px solid rgba(0,0,0,0.08)' }"
 						></div>
 					</div>
@@ -366,11 +366,11 @@
             </div>
           </div>
           <div class="eraser-group">
-            <button :class="['tool', {active: erasing}]" @click="toggleEraser" :title="'按住空格以使用橡皮擦'">
+            <button :class="['tool', {active: erasing}]" @click="toggleEraser" :title="ui.eraser">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 14l-6 6H6v-6l9-9 5 5z"/></svg>
             </button>
             <div class="brush-size eraser-size" style="margin-top:8px">
-              <input type="range" min="2" max="32" v-model.number="eraserSize" title="按住空格+滑动滚轮调整大小" />
+              <input type="range" min="2" max="32" v-model.number="eraserSize" :title="ui.eraserSize" />
               <div class="size-ind" :style="{ color: hintTextColor }">{{eraserSize}}</div>
             </div>
           </div>
@@ -381,6 +381,219 @@
 
 <script>
 import JSZip from 'jszip'
+
+const WHITEBOARD_COPY = {
+  'zh-CN': {
+    debugSettings: '调试设置',
+    savePreset: '保存预设',
+    loadPreset: '恢复预设',
+    shapeRecognition: '形状识别',
+    simplifyScale: '简化比例 (diag×)',
+    minSimplifyPx: '简化像素下限',
+    maxSimplifyPx: '简化像素上限',
+    cornerMinSegRatio: '角点最小段比',
+    cornerAngleDeg: '角点阈值 (°)',
+    pruneAngleDeg: '直线化剔除 (°)',
+    closedThreshRatio: '闭合阈值 (diag×)',
+    lineDeviationRatio: '直线偏差阈值 (diag×)',
+    seamSoftening: '接缝软化',
+    seamBlurPx: '模糊半径 (px)',
+    seamBlurAlpha: '模糊透明度',
+    seamDotScale: '接缝点半径×笔粗',
+    panTool: '手型：拖动画布（按住滚轮也可拖动）',
+    zoomIn: '放大',
+    zoomOut: '缩小',
+    fitToView: '看全（使整幅画布完全显示）',
+    shapeSnapOn: '形状优化：开',
+    shapeSnapOff: '形状优化：关',
+    rotate: '旋转',
+    rotateCw90: '顺时针 90°',
+    slowRotate: '慢速旋转（按住并滑动滚轮）',
+    rotateHint: '或在画布内按住右键滑动滚轮（以指针为圆心）',
+    texture: '材质',
+    textureNone: '无',
+    textureGrid: '网格',
+    texturePaper: '纸张',
+    canvasColor: '画布颜色',
+    eyeProtect: '选择护眼色',
+    eyeProtectOff: '关|护眼',
+    exitBoard: '退出稿纸，返回上页',
+    enterFullscreen: '在显示器全屏',
+    exitFullscreen: '退出全屏 (Esc)',
+    exitFullscreenShort: '退出全屏',
+    undo: '撤销 (Ctrl+Z)',
+    redo: '重做 (Ctrl+Shift+Z)',
+    clear: '清空',
+    screenshot: '截图',
+    import: '导入',
+    export: '导出',
+    textStyle: '文本样式',
+    font: '字体',
+    sansSerif: '无衬线（Sans-Serif）',
+    serif: '衬线（Serif）',
+    monospace: '等宽（Monospace）',
+    chineseSans: '中文黑体/苹方/雅黑',
+    fontWeight: '粗细',
+    normal: '正常',
+    bold: '加粗',
+    fontSize: '字号',
+    align: '对齐',
+    alignLeft: '左',
+    alignCenter: '中',
+    alignRight: '右',
+    fillBox: '填满框',
+    textColor: '文字',
+    background: '背景',
+    strokeColor: '描边色',
+    strokeWidth: '描边宽',
+    lineHeight: '行距',
+    letterSpacing: '字距',
+    shadow: '阴影',
+    blur: '模糊',
+    offsetX: 'X偏移',
+    offsetY: 'Y偏移',
+    pen: '画笔',
+    marker: '马克笔',
+    pencil: '铅笔',
+    brushSize: '按住CTRL+滑动滚轮调整大小',
+    brushColor: '画笔颜色',
+    black: '黑色',
+    white: '白色',
+    eraser: '按住空格以使用橡皮擦',
+    eraserSize: '按住空格+滑动滚轮调整大小',
+    importUnsupported: '导入失败: 文件格式不受支持或已损坏',
+    importZipMissingJson: 'ZIP 内未找到清单 JSON',
+    invalidBoardData: '无效的白板数据',
+    importLegacyJson: '已按旧版 JSON 草稿格式导入',
+    importLegacyMissing: '已导入，但有 {count} 张旧版 blob 图片无法恢复；旧文件没有内嵌图片资源。',
+    exportCanceledImages: '导出已取消：有 {count} 张图片未能打包进文件。请重新插入这些图片后再导出。',
+    exportDone: '导出完成',
+    textEditHint: '文本编辑：回车确认，Esc取消',
+    holdSpace: '按住 空格：临时橡皮擦（滑轮调整大小）',
+    holdCtrl: '按住 Ctrl：滑轮调整画笔大小',
+    maxBoundary: '已到达画布最大边界',
+    fitDone: '已看全画布',
+    optimizedTo: '已优化为：{label}',
+    clearDone: '已清空并复位',
+    missingLegacyImage: '旧版图片缺失',
+    missingLegacyImageReason: '旧版导出未内嵌图片资源',
+    presetSaved: '已保存预设',
+    presetNotFound: '未找到预设',
+    presetRestored: '已恢复预设',
+    puzzleGenerating: '正在由后端生成…',
+    puzzleInvalidImage: '后端返回无效图片',
+    puzzleInserted: '已插入后端结果',
+    puzzleFailed: '后端生成失败，请检查服务',
+    puzzleDone: '已生成数字拼图'
+  },
+  'en-US': {
+    debugSettings: 'Debug Settings',
+    savePreset: 'Save Preset',
+    loadPreset: 'Load Preset',
+    shapeRecognition: 'Shape Recognition',
+    simplifyScale: 'Simplify scale (diag×)',
+    minSimplifyPx: 'Min simplify px',
+    maxSimplifyPx: 'Max simplify px',
+    cornerMinSegRatio: 'Min corner segment ratio',
+    cornerAngleDeg: 'Corner angle (°)',
+    pruneAngleDeg: 'Straight-line prune (°)',
+    closedThreshRatio: 'Closed threshold (diag×)',
+    lineDeviationRatio: 'Line deviation threshold (diag×)',
+    seamSoftening: 'Seam softening',
+    seamBlurPx: 'Blur radius (px)',
+    seamBlurAlpha: 'Blur alpha',
+    seamDotScale: 'Seam dot radius × stroke',
+    panTool: 'Hand tool: drag the canvas (middle mouse drag also works)',
+    zoomIn: 'Zoom in',
+    zoomOut: 'Zoom out',
+    fitToView: 'Fit entire board to view',
+    shapeSnapOn: 'Shape beautify: on',
+    shapeSnapOff: 'Shape beautify: off',
+    rotate: 'Rotate',
+    rotateCw90: 'Rotate 90° clockwise',
+    slowRotate: 'Slow rotate (hold and use the mouse wheel)',
+    rotateHint: 'Or hold right click and use the wheel inside the canvas (around the pointer)',
+    texture: 'Texture',
+    textureNone: 'None',
+    textureGrid: 'Grid',
+    texturePaper: 'Paper',
+    canvasColor: 'Canvas color',
+    eyeProtect: 'Select eye-comfort color',
+    eyeProtectOff: 'Off | Eye comfort',
+    exitBoard: 'Leave the board and return',
+    enterFullscreen: 'Fullscreen on display',
+    exitFullscreen: 'Exit fullscreen (Esc)',
+    exitFullscreenShort: 'Exit fullscreen',
+    undo: 'Undo (Ctrl+Z)',
+    redo: 'Redo (Ctrl+Shift+Z)',
+    clear: 'Clear',
+    screenshot: 'Screenshot',
+    import: 'Import',
+    export: 'Export',
+    textStyle: 'Text Style',
+    font: 'Font',
+    sansSerif: 'Sans-Serif',
+    serif: 'Serif',
+    monospace: 'Monospace',
+    chineseSans: 'Chinese sans fonts',
+    fontWeight: 'Weight',
+    normal: 'Normal',
+    bold: 'Bold',
+    fontSize: 'Size',
+    align: 'Align',
+    alignLeft: 'L',
+    alignCenter: 'C',
+    alignRight: 'R',
+    fillBox: 'Fill box',
+    textColor: 'Text',
+    background: 'Background',
+    strokeColor: 'Stroke',
+    strokeWidth: 'Stroke width',
+    lineHeight: 'Line height',
+    letterSpacing: 'Letter spacing',
+    shadow: 'Shadow',
+    blur: 'Blur',
+    offsetX: 'Offset X',
+    offsetY: 'Offset Y',
+    pen: 'Pen',
+    marker: 'Marker',
+    pencil: 'Pencil',
+    brushSize: 'Hold Ctrl and use the wheel to adjust size',
+    brushColor: 'Brush color',
+    black: 'Black',
+    white: 'White',
+    eraser: 'Hold Space to use the eraser',
+    eraserSize: 'Hold Space and use the wheel to resize the eraser',
+    importUnsupported: 'Import failed: unsupported or damaged file format',
+    importZipMissingJson: 'No manifest JSON found inside the ZIP',
+    invalidBoardData: 'Invalid board data',
+    importLegacyJson: 'Imported using the legacy JSON draft format',
+    importLegacyMissing: 'Imported, but {count} legacy blob-backed images could not be restored because the old file did not embed image assets.',
+    exportCanceledImages: 'Export canceled: {count} images could not be packed into the file. Reinsert those images and try again.',
+    exportDone: 'Export complete',
+    textEditHint: 'Text editing: Enter to confirm, Esc to cancel',
+    holdSpace: 'Hold Space: temporary eraser (wheel adjusts eraser size)',
+    holdCtrl: 'Hold Ctrl: wheel adjusts brush size',
+    maxBoundary: 'Reached the maximum canvas boundary',
+    fitDone: 'Board fitted to view',
+    optimizedTo: 'Beautified as: {label}',
+    clearDone: 'Cleared and reset',
+    missingLegacyImage: 'Legacy image missing',
+    missingLegacyImageReason: 'The legacy export did not embed image assets',
+    presetSaved: 'Preset saved',
+    presetNotFound: 'Preset not found',
+    presetRestored: 'Preset restored',
+    puzzleGenerating: 'Generating on the backend…',
+    puzzleInvalidImage: 'Backend returned an invalid image',
+    puzzleInserted: 'Backend result inserted',
+    puzzleFailed: 'Backend generation failed. Please check the service.',
+    puzzleDone: 'Number puzzle generated'
+  }
+}
+
+function interpolateWhiteboard(template, params = {}) {
+  return String(template).replace(/\{(\w+)\}/g, (_, key) => params[key] ?? '')
+}
 export default {
   name: 'WhiteboardView',
   emits: ['request-exit', 'autosave-updated'],
@@ -388,6 +601,10 @@ export default {
     boardTitle: {
       type: String,
       default: 'Shared Draft'
+    },
+    locale: {
+      type: String,
+      default: 'zh-CN'
     },
     autosaveKey: {
       type: String,
@@ -550,17 +767,17 @@ export default {
       _prevBgColor: null,
       // 预置护眼色列表（常用）
       eyeProtectColors: [
-        { name: '豆沙绿', hex: '#C7EDCC' },
-        { name: '银河白', hex: '#FFFFFF' },
-        { name: '杏仁黄', hex: '#FAF9DE' },
-        { name: '秋叶褐', hex: '#FFF2E2' },
-        { name: '胭脂红', hex: '#FDE6E0' },
-        { name: '海天蓝', hex: '#DCE2F1' },
-        { name: '葛巾紫', hex: '#E9EBFE' },
-        { name: '极光灰', hex: '#EAEAEF' },
-        { name: '青草绿', hex: '#E3EDCD' },
-        { name: '电脑管家', hex: '#CCE8CF' },
-        { name: 'WPS', hex: '#6E7B6C' }
+        { name: '豆沙绿', names: { 'en-US': 'Muted Green' }, hex: '#C7EDCC' },
+        { name: '银河白', names: { 'en-US': 'Galaxy White' }, hex: '#FFFFFF' },
+        { name: '杏仁黄', names: { 'en-US': 'Almond Yellow' }, hex: '#FAF9DE' },
+        { name: '秋叶褐', names: { 'en-US': 'Autumn Beige' }, hex: '#FFF2E2' },
+        { name: '胭脂红', names: { 'en-US': 'Soft Rouge' }, hex: '#FDE6E0' },
+        { name: '海天蓝', names: { 'en-US': 'Sea Blue' }, hex: '#DCE2F1' },
+        { name: '葛巾紫', names: { 'en-US': 'Lavender Mist' }, hex: '#E9EBFE' },
+        { name: '极光灰', names: { 'en-US': 'Aurora Gray' }, hex: '#EAEAEF' },
+        { name: '青草绿', names: { 'en-US': 'Grass Green' }, hex: '#E3EDCD' },
+        { name: '电脑管家', names: { 'en-US': 'Caret Green' }, hex: '#CCE8CF' },
+        { name: 'WPS', names: { 'en-US': 'WPS Green' }, hex: '#6E7B6C' }
       ],
       
       // brush color picker state: when user opens color picker we delay adding to recent until they actually draw
@@ -587,6 +804,15 @@ export default {
     }
   },
   computed: {
+    ui() {
+      return WHITEBOARD_COPY[this.locale] || WHITEBOARD_COPY['zh-CN']
+    },
+    localizedEyeProtectColors() {
+      return (this.eyeProtectColors || []).map((item) => ({
+        ...item,
+        displayName: item.names?.[this.locale] || item.name
+      }))
+    },
     // scale used for drawing (auto cover fit * user scale)
     displayScale() {
       // keep view scale stable when rotating: use unrotated size for fit
@@ -684,6 +910,9 @@ export default {
     }
   },
   methods: {
+    t(key, params = {}) {
+      return interpolateWhiteboard(this.ui?.[key] ?? key, params)
+    },
     openImportPicker() {
       this.$refs.importFileInput?.click()
     },
@@ -727,7 +956,7 @@ export default {
           const zip = await JSZip.loadAsync(buf)
           const jsonEntry = zip.file(/^(index|board|payload|whiteboard)\.json$/i)[0]
             || zip.file(/\.json$/i)[0]
-          if (!jsonEntry) throw new Error('ZIP 内未找到清单 JSON')
+          if (!jsonEntry) throw new Error(this.t('importZipMissingJson'))
           const text = await jsonEntry.async('string')
           payload = JSON.parse(text)
           const assetFiles = zip.file(/\.(png|jpg|jpeg|webp)$/i)
@@ -750,11 +979,11 @@ export default {
           }
         } catch (_) {
           payload = parseTextPayload(buf)
-          importNotice = '已按旧版 JSON 草稿格式导入'
+          importNotice = this.t('importLegacyJson')
         }
       }
       payload = normalizePayload(payload)
-      if (!(payload && payload.meta)) throw new Error('无效的白板数据')
+      if (!(payload && payload.meta)) throw new Error(this.t('invalidBoardData'))
 
       this.width = payload.meta.width ?? this.width
       this.height = payload.meta.height ?? this.height
@@ -780,7 +1009,7 @@ export default {
         })
       } catch(_){ }
       if (unresolvedImageCount > 0) {
-        const msg = `已导入，但有 ${unresolvedImageCount} 张旧版 blob 图片无法恢复；旧文件没有内嵌图片资源。`
+        const msg = this.t('importLegacyMissing', { count: unresolvedImageCount })
         try { this.showHUD(msg, 2200) } catch(_){ try { alert(msg) } catch(__){} }
       } else if (importNotice) {
         try { this.showHUD(importNotice, 1400) } catch(_){ }
@@ -959,7 +1188,7 @@ export default {
             this._strokesDirty = true
             this.saveAutosave && this.saveAutosave()
             this.redraw()
-            try { this.showHUD('文本编辑：回车确认，Esc取消') } catch(_){ }
+            try { this.showHUD(this.t('textEditHint')) } catch(_){ }
             // 抑制紧随其后的 pointerup 触发的“点”
             this._suppressNextPointerUp = true
             return
@@ -1098,16 +1327,16 @@ export default {
       form.append('minRegionPx', String(this.puzzleMinRegionPx||120))
       form.append('smoothPasses', String(this.puzzleLabelSmoothPasses||2))
       const endpoint = this.puzzleApiEndpoint || '/api/puzzle/paintbynumbers'
-      this.showHUD && this.showHUD('正在由后端生成…')
+      this.showHUD && this.showHUD(this.t('puzzleGenerating'))
       fetch(endpoint, { method: 'POST', body: form })
         .then(res=>{ if(!res.ok) throw new Error('HTTP '+res.status); return res.blob() })
         .then(blob=> new Promise((resolve)=>{ const url=URL.createObjectURL(blob); const img=new Image(); img.onload=()=>{ try{URL.revokeObjectURL(url)}catch(_){ }; resolve(img) }; img.onerror=()=>{ try{URL.revokeObjectURL(url)}catch(_){ }; resolve(null) }; img.src=url }))
         .then(img=>{
-          if(!img){ this.showHUD && this.showHUD('后端返回无效图片'); return }
+          if(!img){ this.showHUD && this.showHUD(this.t('puzzleInvalidImage')); return }
           this._insertImageStrokeFromImage(img)
-          this.showHUD && this.showHUD('已插入后端结果')
+          this.showHUD && this.showHUD(this.t('puzzleInserted'))
         })
-        .catch(err=>{ console.error('puzzle server failed', err); this.showHUD && this.showHUD('后端生成失败，请检查服务') })
+        .catch(err=>{ console.error('puzzle server failed', err); this.showHUD && this.showHUD(this.t('puzzleFailed')) })
     },
     _insertImageStrokeFromImage(img){
       // 居中放置到逻辑画布中，保持比例
@@ -1216,7 +1445,7 @@ export default {
         this.puzzleOverlay = out
         this.puzzleOverlayBox = { x: bx, y: by, w: dw, h: dh }
       }
-      this.showHUD && this.showHUD('已生成数字拼图')
+      this.showHUD && this.showHUD(this.t('puzzleDone'))
       this.redraw()
     },
     _kmeansQuantize(data, w, h, k=6, iters=8){
@@ -1423,20 +1652,20 @@ export default {
         const key = 'wb_debug_preset_v1'
         const data = JSON.stringify(this.dbg || {})
         localStorage.setItem(key, data)
-        try{ this.showHUD && this.showHUD('已保存预设') }catch(_){ }
+        try{ this.showHUD && this.showHUD(this.t('presetSaved')) }catch(_){ }
       }catch(e){ /* ignore */ }
     },
     loadDebugPreset(){
       try{
         const key = 'wb_debug_preset_v1'
         const raw = localStorage.getItem(key)
-        if (!raw) { try{ this.showHUD && this.showHUD('未找到预设') }catch(_){ }; return }
+        if (!raw) { try{ this.showHUD && this.showHUD(this.t('presetNotFound')) }catch(_){ }; return }
         const val = JSON.parse(raw)
         if (val && typeof val==='object') {
           this.dbg = { ...(this.dbg||{}), ...val }
           // 触发一次重绘以便 seam 设置立即可见
           this.redraw && this.redraw()
-          try{ this.showHUD && this.showHUD('已恢复预设') }catch(_){ }
+          try{ this.showHUD && this.showHUD(this.t('presetRestored')) }catch(_){ }
         }
       }catch(e){ /* ignore */ }
     },
@@ -1719,11 +1948,11 @@ export default {
         this.erasing = true
         this.updateCursor()
         // HUD 提示：按住空格为临时橡皮擦
-        this.showHUD('按住 空格：临时橡皮擦（滑轮调整大小）', 1000)
+        this.showHUD(this.t('holdSpace'), 1000)
       }
       // HUD 提示：按住 Ctrl 可调整画笔大小（仅在按下 Ctrl 时显示）
       if (e.key === 'Control' || e.code === 'ControlLeft' || e.code === 'ControlRight') {
-        this.showHUD('按住 Ctrl：滑轮调整画笔大小', 1000)
+        this.showHUD(this.t('holdCtrl'), 1000)
       }
     },
     onKeyUp(e){
@@ -1967,7 +2196,7 @@ export default {
         } else {
           // 没有扩展成功但存在溢出，说明已达到最大边界
           if (hadHorizontalOverflow || hadVerticalOverflow) {
-            this.showHUD('已到达画布最大边界', 1200)
+            this.showHUD(this.t('maxBoundary'), 1200)
           }
         }
       } catch (err) { /* ignore */ }
@@ -2809,7 +3038,7 @@ export default {
       this.scale = target / (this.computeFit() || 1)
       this.redraw(); this.updateCursor(); this.updateToolbarPositions();
       // HUD hint
-      try { this.showHUD('已看全画布'); } catch(_) {}
+      try { this.showHUD(this.t('fitDone')); } catch(_) {}
     },
   rotate90(dir='cw') { this.rotation = (this.rotation + (dir==='cw'?90:-90) + 360) % 360; this.updateToolbarPositions(); this.redraw() },
     onTextureChange() { this.redraw() },
@@ -3024,7 +3253,7 @@ export default {
       this.strokes[idx] = shaped
       this._strokesDirty = true
       this.cancelShapePreview(true)
-      this.saveAutosave(); this.redraw(); try { this.showHUD('已优化为：' + (p.shape.label || p.shape.type)) } catch(_){}
+      this.saveAutosave(); this.redraw(); try { this.showHUD(this.t('optimizedTo', { label: p.shape.label || p.shape.type })) } catch(_){}
     },
     cancelShapePreview(silent=false) {
       try { clearTimeout(this._shapePreviewTimer) } catch(_) {}
@@ -3086,7 +3315,7 @@ export default {
           this._suppressNextPointerUp = true
           this.cancelShapePreview(true)
           this.cancelShapeHold()
-          this.saveAutosave(); this.redraw(); try { this.showHUD('已优化为：' + (shaped.shape.label || shaped.shape.type)) } catch(_){}
+          this.saveAutosave(); this.redraw(); try { this.showHUD(this.t('optimizedTo', { label: shaped.shape.label || shaped.shape.type })) } catch(_){}
         }
       }, 1200)
     },
@@ -3525,7 +3754,7 @@ export default {
         }
       }
       if (unresolvedExportImages > 0) {
-        const msg = `导出已取消：有 ${unresolvedExportImages} 张图片未能打包进文件。请重新插入这些图片后再导出。`
+        const msg = this.t('exportCanceledImages', { count: unresolvedExportImages })
         try { this.showHUD(msg, 2400) } catch(_){ try { alert(msg) } catch(__){} }
         return
       }
@@ -3540,7 +3769,7 @@ export default {
       a.download = `${safeTitle}_${Date.now()}.zxkjbb`
       a.click()
       URL.revokeObjectURL(url)
-      try { this.showHUD('导出完成', 1200) } catch(_){ }
+      try { this.showHUD(this.t('exportDone'), 1200) } catch(_){ }
     },
     async onImportFile(e) {
       const f = e.target.files && e.target.files[0]
@@ -3549,7 +3778,7 @@ export default {
         await this.importFile(f)
       } catch (err) {
         console.error('import failed', err)
-        alert('导入失败: 文件格式不受支持或已损坏')
+        alert(this.t('importUnsupported'))
       }
       e.target.value = null
     },
@@ -3662,7 +3891,7 @@ export default {
   this.redraw()
       this.updateCursor(); this.updateToolbarPositions()
       this.saveAutosave()
-      try { this.showHUD('已清空并复位') } catch(_){}
+      try { this.showHUD(this.t('clearDone')) } catch(_){}
     },
     saveAutosave() {
       try {

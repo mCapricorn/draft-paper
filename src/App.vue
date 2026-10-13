@@ -3,15 +3,153 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import WhiteboardView from './components/WhiteboardView.vue'
 
 const APP_STATE_KEY = 'draft-paper-app-state'
+const APP_LOCALE_KEY = 'draft-paper-locale'
 const APP_SCHEMA_VERSION = 1
+const SUPPORTED_LOCALES = ['zh-CN', 'en-US']
+
+const appCopy = {
+  'zh-CN': {
+    untitledDraft: '未命名草稿',
+    justNow: '刚刚',
+    editorIdle: '未开始编辑',
+    localMode: '本地模式',
+    lastSavedAt: '最近保存 {time}',
+    draftCreated: '已创建新草稿，等待书写',
+    restoredDraft: '已恢复本地草稿，{time}',
+    blankDraftOpened: '空白草稿已打开',
+    draftPrefix: '草稿',
+    importDraft: '导入草稿',
+    importingFile: '正在导入 {name}...',
+    workbenchReady: '工作台已就绪',
+    deleteConfirm: '确认删除“{title}”吗？该草稿的本地内容也会一起清除。',
+    draftDeleted: '草稿已删除',
+    draftCopySuffix: '副本',
+    autosavedAt: '已自动保存，{time}',
+    emptyHint: '新建一个草稿，或者导入已有草稿文件',
+    appTitleSuffix: 'Draft Paper',
+    eyebrow: '单人版线上草稿纸',
+    heroTitle: '打开就写，离开也能回来。',
+    heroBody: '这是一版纯前端、本地保存的草稿纸工作台。它保留了现有白板能力，并补上最近草稿、继续编辑、导入导出和使用说明，让它更接近真正可用的个人工具。',
+    newDraft: '新建草稿',
+    importDraftButton: '导入草稿',
+    shortcuts: '查看快捷键',
+    localeLabel: '语言',
+    localeChinese: '中文',
+    localeEnglish: 'English',
+    draftCountUnit: '份本地草稿',
+    contentCountUnit: '份已有内容',
+    localStorageNote: '所有数据都保存在当前浏览器本地。导出文件后可离线备份，再导入恢复。',
+    recentDrafts: '最近草稿',
+    recentDraftsHint: '从最近编辑记录继续，不需要重新找入口。',
+    import: '导入',
+    performanceHigh: '高性能',
+    performanceBalanced: '平衡',
+    strokeCount: '共 {count} 条笔迹',
+    noContentYet: '还没有写入内容',
+    duplicate: '复制',
+    delete: '删除',
+    noDrafts: '还没有草稿',
+    noDraftsHint: '先创建一张空白草稿纸，或者导入已有草稿文件。',
+    featuresTitle: '当前版本能做什么',
+    featuresHint: '这一版聚焦单人本地使用，不引入后端和账号。',
+    featureAutosave: '自动保存当前草稿，刷新后继续写。',
+    featureHistory: '支持撤销、重做、截图、导入导出。',
+    featureViewport: '支持平移、缩放、旋转和形状优化。',
+    featureMultiDraft: '工作台可管理多份本地草稿，并保留最近访问记录。',
+    usageTitle: '建议使用方式',
+    usageHint: '把它当作个人草稿纸、演算板或讲解板使用。需要长期保存时，记得定期导出文件。',
+    backToWorkbench: '返回工作台',
+    boardName: '草稿名',
+    performanceMode: '性能模式',
+    localBadge: '本地版',
+    help: '帮助',
+    helpTitle: '快捷键与使用说明',
+    helpHint: '这一版主要服务于单人本地书写场景。',
+    close: '关闭',
+    helpItemSpace: '空格：临时橡皮擦，滚轮可调节橡皮大小。',
+    helpItemCtrlWheel: 'Ctrl + 滚轮：调整画笔大小或缩放视图。',
+    helpItemRotate: '右键 + 滚轮：围绕指针进行慢速旋转。',
+    helpItemUndo: 'Ctrl + Z / Ctrl + Shift + Z：撤销与重做。',
+    helpItemSave: '退出工作台前无需手动保存，白板会自动写入本地。'
+  },
+  'en-US': {
+    untitledDraft: 'Untitled Draft',
+    justNow: 'Just now',
+    editorIdle: 'Not editing yet',
+    localMode: 'Local mode',
+    lastSavedAt: 'Last saved {time}',
+    draftCreated: 'New draft created and ready to write',
+    restoredDraft: 'Local draft restored, {time}',
+    blankDraftOpened: 'Blank draft opened',
+    draftPrefix: 'Draft',
+    importDraft: 'Imported Draft',
+    importingFile: 'Importing {name}...',
+    workbenchReady: 'Workbench ready',
+    deleteConfirm: 'Delete "{title}"? Its local content will be removed as well.',
+    draftDeleted: 'Draft deleted',
+    draftCopySuffix: 'Copy',
+    autosavedAt: 'Autosaved at {time}',
+    emptyHint: 'Create a new draft or import an existing draft file',
+    appTitleSuffix: 'Draft Paper',
+    eyebrow: 'Single-user online draft paper',
+    heroTitle: 'Start writing instantly, come back anytime.',
+    heroBody: 'This is a pure front-end, locally saved draft-paper workbench. It keeps the whiteboard core and adds recent drafts, resume flow, import/export, and usage guidance so it behaves more like a real personal tool.',
+    newDraft: 'New Draft',
+    importDraftButton: 'Import Draft',
+    shortcuts: 'Shortcuts',
+    localeLabel: 'Language',
+    localeChinese: '中文',
+    localeEnglish: 'English',
+    draftCountUnit: 'local drafts',
+    contentCountUnit: 'with content',
+    localStorageNote: 'All data stays in this browser. Export files for offline backup, then import them again when needed.',
+    recentDrafts: 'Recent Drafts',
+    recentDraftsHint: 'Resume from recent work without digging for the entry point again.',
+    import: 'Import',
+    performanceHigh: 'High Performance',
+    performanceBalanced: 'Balanced',
+    strokeCount: '{count} strokes',
+    noContentYet: 'No content yet',
+    duplicate: 'Duplicate',
+    delete: 'Delete',
+    noDrafts: 'No drafts yet',
+    noDraftsHint: 'Create a blank draft first, or import an existing draft file.',
+    featuresTitle: 'What this version can do',
+    featuresHint: 'This version focuses on local single-user usage, without backend services or accounts.',
+    featureAutosave: 'Autosave the current draft and restore it after a refresh.',
+    featureHistory: 'Supports undo, redo, screenshot, import, and export.',
+    featureViewport: 'Supports pan, zoom, rotate, and shape beautification.',
+    featureMultiDraft: 'Manage multiple local drafts and keep recent activity on the workbench.',
+    usageTitle: 'Suggested usage',
+    usageHint: 'Use it as a personal draft paper, scratchpad, or explanation board. Export files regularly if you want long-term backups.',
+    backToWorkbench: 'Back to Workbench',
+    boardName: 'Draft Name',
+    performanceMode: 'Performance Mode',
+    localBadge: 'Local',
+    help: 'Help',
+    helpTitle: 'Shortcuts and usage',
+    helpHint: 'This version is mainly designed for local single-user writing.',
+    close: 'Close',
+    helpItemSpace: 'Space: temporary eraser; use the wheel to adjust eraser size.',
+    helpItemCtrlWheel: 'Ctrl + wheel: adjust brush size or zoom the view.',
+    helpItemRotate: 'Right click + wheel: rotate slowly around the pointer.',
+    helpItemUndo: 'Ctrl + Z / Ctrl + Shift + Z: undo and redo.',
+    helpItemSave: 'You do not need to save manually before leaving the workbench; the board saves itself locally.'
+  }
+}
+
+function interpolate(template, params = {}) {
+  return String(template).replace(/\{(\w+)\}/g, (_, key) => params[key] ?? '')
+}
 
 function createDraftRecord(overrides = {}) {
   const now = Date.now()
   const id = overrides.id || `draft-${Math.random().toString(36).slice(2, 10)}`
+  const fallbackLocale = overrides.locale && SUPPORTED_LOCALES.includes(overrides.locale) ? overrides.locale : 'zh-CN'
 
   return {
     id,
-    title: overrides.title || '未命名草稿',
+    title: overrides.title || appCopy[fallbackLocale].untitledDraft,
     performanceMode: overrides.performanceMode || 'balanced',
     autosaveKey: overrides.autosaveKey || `draft-paper-board-${id}`,
     createdAt: overrides.createdAt || now,
@@ -26,10 +164,31 @@ function createDraftRecord(overrides = {}) {
   }
 }
 
+function resolveInitialLocale() {
+  try {
+    const stored = localStorage.getItem(APP_LOCALE_KEY)
+    if (stored && SUPPORTED_LOCALES.includes(stored)) return stored
+  } catch (_) {}
+
+  if (typeof navigator !== 'undefined') {
+    const navLocale = String(navigator.language || '').toLowerCase()
+    if (navLocale.startsWith('en')) return 'en-US'
+  }
+
+  return 'zh-CN'
+}
+
+const locale = ref(resolveInitialLocale())
+
+function t(key, params = {}) {
+  const bundle = appCopy[locale.value] || appCopy['zh-CN']
+  return interpolate(bundle[key] ?? key, params)
+}
+
 function formatTime(ts) {
-  if (!ts) return '刚刚'
+  if (!ts) return t('justNow')
   const date = new Date(ts)
-  return new Intl.DateTimeFormat('zh-CN', {
+  return new Intl.DateTimeFormat(locale.value === 'en-US' ? 'en-US' : 'zh-CN', {
     month: 'numeric',
     day: 'numeric',
     hour: '2-digit',
@@ -41,7 +200,7 @@ const drafts = ref([])
 const activeDraftId = ref('')
 const isEditorMode = ref(false)
 const helpOpen = ref(false)
-const saveStatus = ref('未开始编辑')
+const saveStatus = ref(t('editorIdle'))
 const whiteboardRef = ref(null)
 const workbenchImportInput = ref(null)
 
@@ -51,8 +210,8 @@ const sortedDrafts = computed(() => {
 })
 const hasDrafts = computed(() => drafts.value.length > 0)
 const lastSavedText = computed(() => {
-  if (!activeDraft.value) return '本地模式'
-  return `最近保存 ${formatTime(activeDraft.value.updatedAt)}`
+  if (!activeDraft.value) return t('localMode')
+  return t('lastSavedAt', { time: formatTime(activeDraft.value.updatedAt) })
 })
 const editorKey = computed(() => activeDraft.value ? `${activeDraft.value.id}:${activeDraft.value.autosaveKey}` : 'empty')
 
@@ -122,7 +281,7 @@ function createDraft(options = {}) {
   const draft = createDraftRecord(options)
   drafts.value.unshift(draft)
   activeDraftId.value = draft.id
-  saveStatus.value = '已创建新草稿，等待书写'
+  saveStatus.value = t('draftCreated')
   persistAppState()
   return draft
 }
@@ -134,12 +293,12 @@ function openDraft(draftId) {
   draft.lastOpenedAt = Date.now()
   activeDraftId.value = draft.id
   isEditorMode.value = true
-  saveStatus.value = draft.summary?.hasContent ? `已恢复本地草稿，${lastSavedText.value}` : '空白草稿已打开'
+  saveStatus.value = draft.summary?.hasContent ? t('restoredDraft', { time: lastSavedText.value }) : t('blankDraftOpened')
   persistAppState()
 }
 
 function startNewDraft() {
-  const draft = createDraft({ title: `草稿 ${drafts.value.length + 1}` })
+  const draft = createDraft({ title: `${t('draftPrefix')} ${drafts.value.length + 1}`, locale: locale.value })
   isEditorMode.value = true
   openDraft(draft.id)
 }
@@ -151,11 +310,11 @@ function triggerWorkbenchImport() {
 async function openImportedDraft(file) {
   if (!file) return
 
-  const baseName = String(file.name || '导入草稿').replace(/\.[^.]+$/, '') || '导入草稿'
+  const baseName = String(file.name || t('importDraft')).replace(/\.[^.]+$/, '') || t('importDraft')
   const draft = createDraft({ title: baseName })
   isEditorMode.value = true
   openDraft(draft.id)
-  saveStatus.value = `正在导入 ${file.name}...`
+  saveStatus.value = t('importingFile', { name: file.name })
 
   await nextTick()
   await whiteboardRef.value?.importFile?.(file)
@@ -171,14 +330,14 @@ async function onWorkbenchImportChange(event) {
 
 function returnToWorkbench() {
   isEditorMode.value = false
-  saveStatus.value = '工作台已就绪'
+  saveStatus.value = t('workbenchReady')
   persistAppState()
 }
 
 function deleteDraft(draftId) {
   const draft = drafts.value.find((item) => item.id === draftId)
   if (!draft) return
-  const confirmed = window.confirm(`确认删除“${draft.title}”吗？该草稿的本地内容也会一起清除。`)
+  const confirmed = window.confirm(t('deleteConfirm', { title: draft.title }))
   if (!confirmed) return
 
   localStorage.removeItem(draft.autosaveKey)
@@ -189,7 +348,7 @@ function deleteDraft(draftId) {
     isEditorMode.value = false
   }
 
-  saveStatus.value = '草稿已删除'
+  saveStatus.value = t('draftDeleted')
   persistAppState()
 }
 
@@ -198,7 +357,7 @@ function duplicateDraft(draftId) {
   if (!source) return
 
   const draft = createDraft({
-    title: `${source.title} 副本`,
+    title: `${source.title} ${t('draftCopySuffix')}`,
     performanceMode: source.performanceMode,
     summary: source.summary
   })
@@ -219,8 +378,17 @@ function handleAutosaveUpdated(event) {
   draft.updatedAt = event.updatedAt || Date.now()
   draft.lastOpenedAt = draft.updatedAt
   syncDraftSummaryFromStorage(draft)
-  saveStatus.value = `已自动保存，${formatTime(draft.updatedAt)}`
+  saveStatus.value = t('autosavedAt', { time: formatTime(draft.updatedAt) })
   persistAppState()
+}
+
+function setLocale(nextLocale) {
+  if (!SUPPORTED_LOCALES.includes(nextLocale)) return
+  locale.value = nextLocale
+  try { localStorage.setItem(APP_LOCALE_KEY, nextLocale) } catch (_) {}
+  if (!isEditorMode.value) {
+    saveStatus.value = hasDrafts.value ? t('workbenchReady') : t('emptyHint')
+  }
 }
 
 watch(
@@ -237,15 +405,23 @@ watch(
 watch(
   () => activeDraft.value?.title,
   (title) => {
-    document.title = title ? `${title} | Draft Paper` : 'Draft Paper'
+    document.title = title ? `${title} | ${t('appTitleSuffix')}` : t('appTitleSuffix')
   },
   { immediate: true }
 )
 
+watch(locale, () => {
+  if (activeDraft.value?.title) {
+    document.title = `${activeDraft.value.title} | ${t('appTitleSuffix')}`
+  } else {
+    document.title = t('appTitleSuffix')
+  }
+})
+
 onMounted(() => {
   loadAppState()
   if (!hasDrafts.value) {
-    saveStatus.value = '新建一个草稿，或者恢复旧版本地内容'
+    saveStatus.value = t('emptyHint')
   }
 })
 </script>
@@ -255,16 +431,21 @@ onMounted(() => {
     <template v-if="!isEditorMode">
       <header class="hero-shell">
         <div class="hero-copy">
-          <span class="eyebrow">单人版线上草稿纸</span>
-          <h1>打开就写，离开也能回来。</h1>
-          <p>
-            这是一版纯前端、本地保存的草稿纸工作台。它保留了现有白板能力，并补上最近草稿、继续编辑、导入导出和使用说明，让它更接近真正可用的个人工具。
-          </p>
+          <span class="eyebrow">{{ t('eyebrow') }}</span>
+          <h1>{{ t('heroTitle') }}</h1>
+          <p>{{ t('heroBody') }}</p>
 
           <div class="hero-actions">
-            <button class="primary-btn" @click="startNewDraft">新建草稿</button>
-            <button class="ghost-btn" @click="triggerWorkbenchImport">导入草稿</button>
-            <button class="ghost-btn" @click="helpOpen = true">查看快捷键</button>
+            <button class="primary-btn" @click="startNewDraft">{{ t('newDraft') }}</button>
+            <button class="ghost-btn" @click="triggerWorkbenchImport">{{ t('importDraftButton') }}</button>
+            <button class="ghost-btn" @click="helpOpen = true">{{ t('shortcuts') }}</button>
+            <label class="mode-select locale-select">
+              <span>{{ t('localeLabel') }}</span>
+              <select :value="locale" @change="setLocale($event.target.value)">
+                <option value="zh-CN">{{ t('localeChinese') }}</option>
+                <option value="en-US">{{ t('localeEnglish') }}</option>
+              </select>
+            </label>
           </div>
           <input ref="workbenchImportInput" class="hidden-file" type="file" accept=".zxkjbb,.json" @change="onWorkbenchImportChange" />
         </div>
@@ -272,15 +453,13 @@ onMounted(() => {
         <div class="hero-panel">
           <div class="hero-stat">
             <strong>{{ drafts.length }}</strong>
-            <span>份本地草稿</span>
+            <span>{{ t('draftCountUnit') }}</span>
           </div>
           <div class="hero-stat">
             <strong>{{ drafts.filter((draft) => draft.summary?.hasContent).length }}</strong>
-            <span>份已有内容</span>
+            <span>{{ t('contentCountUnit') }}</span>
           </div>
-          <div class="hero-note">
-            所有数据都保存在当前浏览器本地。导出文件后可离线备份，再导入恢复。
-          </div>
+          <div class="hero-note">{{ t('localStorageNote') }}</div>
         </div>
       </header>
 
@@ -288,12 +467,12 @@ onMounted(() => {
         <section class="panel recent-panel">
           <div class="section-head">
             <div>
-              <h2>最近草稿</h2>
-              <p>从最近编辑记录继续，不需要重新找入口。</p>
+              <h2>{{ t('recentDrafts') }}</h2>
+              <p>{{ t('recentDraftsHint') }}</p>
             </div>
             <div class="section-actions">
-              <button class="ghost-btn" @click="triggerWorkbenchImport">导入</button>
-              <button class="ghost-btn" @click="startNewDraft">新建</button>
+              <button class="ghost-btn" @click="triggerWorkbenchImport">{{ t('import') }}</button>
+              <button class="ghost-btn" @click="startNewDraft">{{ t('newDraft') }}</button>
             </div>
           </div>
 
@@ -305,45 +484,45 @@ onMounted(() => {
               :style="{ '--card-tint': draft.summary?.bgColor || '#ffffff' }"
             >
               <button class="draft-open" @click="openDraft(draft.id)">
-                <span class="draft-chip">{{ draft.performanceMode === 'high' ? '高性能' : '平衡' }}</span>
+                <span class="draft-chip">{{ draft.performanceMode === 'high' ? t('performanceHigh') : t('performanceBalanced') }}</span>
                 <h3>{{ draft.title }}</h3>
                 <p>
-                  {{ draft.summary?.hasContent ? `共 ${draft.summary?.strokeCount || 0} 条笔迹` : '还没有写入内容' }}
+                  {{ draft.summary?.hasContent ? t('strokeCount', { count: draft.summary?.strokeCount || 0 }) : t('noContentYet') }}
                 </p>
                 <span class="draft-time">{{ formatTime(draft.lastOpenedAt || draft.updatedAt) }}</span>
               </button>
 
               <div class="draft-actions">
-                <button class="link-btn" @click="duplicateDraft(draft.id)">复制</button>
-                <button class="link-btn danger" @click="deleteDraft(draft.id)">删除</button>
+                <button class="link-btn" @click="duplicateDraft(draft.id)">{{ t('duplicate') }}</button>
+                <button class="link-btn danger" @click="deleteDraft(draft.id)">{{ t('delete') }}</button>
               </div>
             </article>
           </div>
 
           <div v-else class="empty-state">
-            <h3>还没有草稿</h3>
-            <p>先创建一张空白草稿纸，或者把旧版本地内容迁移过来。</p>
+            <h3>{{ t('noDrafts') }}</h3>
+            <p>{{ t('noDraftsHint') }}</p>
           </div>
         </section>
 
         <section class="panel info-panel">
           <div class="section-head">
             <div>
-              <h2>当前版本能做什么</h2>
-              <p>这一版聚焦单人本地使用，不引入后端和账号。</p>
+              <h2>{{ t('featuresTitle') }}</h2>
+              <p>{{ t('featuresHint') }}</p>
             </div>
           </div>
 
           <ul class="capability-list">
-            <li>自动保存当前草稿，刷新后继续写。</li>
-            <li>支持撤销、重做、截图、导入导出。</li>
-            <li>支持平移、缩放、旋转和形状优化。</li>
-            <li>工作台可管理多份本地草稿，并保留最近访问记录。</li>
+            <li>{{ t('featureAutosave') }}</li>
+            <li>{{ t('featureHistory') }}</li>
+            <li>{{ t('featureViewport') }}</li>
+            <li>{{ t('featureMultiDraft') }}</li>
           </ul>
 
           <div class="tips-box">
-            <h3>建议使用方式</h3>
-            <p>把它当作个人草稿纸、演算板或讲解板使用。需要长期保存时，记得定期导出文件。</p>
+            <h3>{{ t('usageTitle') }}</h3>
+            <p>{{ t('usageHint') }}</p>
           </div>
         </section>
       </main>
@@ -352,26 +531,34 @@ onMounted(() => {
     <template v-else-if="activeDraft">
       <header class="editor-topbar">
         <div class="editor-main">
-          <button class="ghost-btn" @click="returnToWorkbench">返回工作台</button>
+          <button class="ghost-btn" @click="returnToWorkbench">{{ t('backToWorkbench') }}</button>
 
           <div class="editor-title-wrap">
-            <label for="board-name">草稿名</label>
+            <label for="board-name">{{ t('boardName') }}</label>
             <input id="board-name" v-model="activeDraft.title" class="board-name-input" type="text" maxlength="40" />
           </div>
 
           <label class="mode-select">
-            <span>性能模式</span>
+            <span>{{ t('performanceMode') }}</span>
             <select v-model="activeDraft.performanceMode">
-              <option value="balanced">平衡</option>
-              <option value="high">高性能</option>
+              <option value="balanced">{{ t('performanceBalanced') }}</option>
+              <option value="high">{{ t('performanceHigh') }}</option>
+            </select>
+          </label>
+
+          <label class="mode-select locale-select compact-locale-select">
+            <span>{{ t('localeLabel') }}</span>
+            <select :value="locale" @change="setLocale($event.target.value)">
+              <option value="zh-CN">{{ t('localeChinese') }}</option>
+              <option value="en-US">{{ t('localeEnglish') }}</option>
             </select>
           </label>
         </div>
 
         <div class="editor-status">
-          <span class="status-badge">本地版</span>
+          <span class="status-badge">{{ t('localBadge') }}</span>
           <span>{{ lastSavedText }}</span>
-          <button class="ghost-btn" @click="helpOpen = true">帮助</button>
+          <button class="ghost-btn" @click="helpOpen = true">{{ t('help') }}</button>
         </div>
       </header>
 
@@ -381,6 +568,7 @@ onMounted(() => {
         :board-title="activeDraft.title"
         :autosave-key="activeDraft.autosaveKey"
         :performance-mode="activeDraft.performanceMode"
+        :locale="locale"
         @request-exit="returnToWorkbench"
         @autosave-updated="handleAutosaveUpdated"
       />
@@ -392,18 +580,18 @@ onMounted(() => {
       <section class="modal-card">
         <div class="section-head compact">
           <div>
-            <h2>快捷键与使用说明</h2>
-            <p>这一版主要服务于单人本地书写场景。</p>
+            <h2>{{ t('helpTitle') }}</h2>
+            <p>{{ t('helpHint') }}</p>
           </div>
-          <button class="ghost-btn" @click="helpOpen = false">关闭</button>
+          <button class="ghost-btn" @click="helpOpen = false">{{ t('close') }}</button>
         </div>
 
         <ul class="capability-list modal-list">
-          <li>空格：临时橡皮擦，滚轮可调节橡皮大小。</li>
-          <li>Ctrl + 滚轮：调整画笔大小或缩放视图。</li>
-          <li>右键 + 滚轮：围绕指针进行慢速旋转。</li>
-          <li>Ctrl + Z / Ctrl + Shift + Z：撤销与重做。</li>
-          <li>退出工作台前无需手动保存，白板会自动写入本地。</li>
+          <li>{{ t('helpItemSpace') }}</li>
+          <li>{{ t('helpItemCtrlWheel') }}</li>
+          <li>{{ t('helpItemRotate') }}</li>
+          <li>{{ t('helpItemUndo') }}</li>
+          <li>{{ t('helpItemSave') }}</li>
         </ul>
       </section>
     </div>
