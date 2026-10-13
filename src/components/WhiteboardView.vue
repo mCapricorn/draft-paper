@@ -383,6 +383,31 @@
 import JSZip from 'jszip'
 export default {
   name: 'WhiteboardView',
+  props: {
+    boardTitle: {
+      type: String,
+      default: 'Shared Draft'
+    },
+    performanceMode: {
+      type: String,
+      default: 'balanced'
+    }
+  },
+  watch: {
+    performanceMode(mode) {
+      const isHighPerformance = mode === 'high'
+      this.maxDisplayScale = isHighPerformance ? 3 : 4
+      this.dbg = {
+        ...this.dbg,
+        minSimplifyPx: isHighPerformance ? 4 : 2,
+        maxSimplifyPx: isHighPerformance ? 10 : 8,
+        simplifyScale: isHighPerformance ? 0.018 : 0.016,
+        seamBlurPx: isHighPerformance ? 0.4 : 0.6,
+        seamDotScale: isHighPerformance ? 0.45 : 0.55
+      }
+      this.invalidate && this.invalidate()
+    }
+  },
   data() {
     return {
       // default to viewport size so canvas fills browser
