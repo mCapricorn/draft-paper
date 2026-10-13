@@ -1,4 +1,4 @@
-# Online Draft Paper
+# Draft Paper
 
 这是一个独立的在线草稿纸项目，目标是提供一个轻量、可公开发布、单人使用的电子白板/草稿工具。
 
@@ -11,7 +11,7 @@
 ## 已完成的改造
 
 - 从主工程中抽离画板核心代码，保留独立运行能力
-- 创建 GitHub public 仓库：https://github.com/mCapricorn/shared-whiteboard
+- 创建 GitHub public 仓库：https://github.com/mCapricorn/draft-paper
 - 增加草稿名与性能模式入口，适合个人使用场景
 - 保留本地恢复、导入导出与截图能力
 
