@@ -1,3 +1,5 @@
+English version: [README.en.md](README.en.md)
+
 # Draft Paper
 
 这是一个独立的在线草稿纸项目，目标是提供一个轻量、可公开发布、单人使用的电子白板/草稿工具。
