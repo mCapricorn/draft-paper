@@ -926,18 +926,19 @@ export default {
       let payload = null
       let importNotice = ''
       let unresolvedImageCount = 0
-      const normalizePayload = (input)=>{
+      const normalizePayload = (input, options = {})=>{
+        const treatBlobAsMissing = options.treatBlobAsMissing !== false
         const normalized = input && typeof input === 'object' ? input : {}
         const strokes = Array.isArray(normalized.strokes) ? normalized.strokes : []
         normalized.strokes = strokes.map((stroke)=>{
           if (!stroke || typeof stroke !== 'object') return stroke
           const { _img, ...rest } = stroke
-          if (rest.type === 'image' && typeof rest.src === 'string' && rest.src.startsWith('blob:')) {
+          if (treatBlobAsMissing && rest.type === 'image' && typeof rest.src === 'string' && rest.src.startsWith('blob:')) {
             unresolvedImageCount += 1
             return {
               ...rest,
               _importMissing: true,
-              _missingReason: '旧版导出未内嵌图片资源'
+              _missingReason: this.t('missingLegacyImageReason')
             }
           }
           return rest
@@ -982,7 +983,7 @@ export default {
           importNotice = this.t('importLegacyJson')
         }
       }
-      payload = normalizePayload(payload)
+      payload = normalizePayload(payload, { treatBlobAsMissing: !isZip })
       if (!(payload && payload.meta)) throw new Error(this.t('invalidBoardData'))
 
       this.width = payload.meta.width ?? this.width
