@@ -200,7 +200,7 @@
 
       <button class="wb-btn" @click="screenshot" title="截图">截图</button>
       <label class="wb-btn" title="导入">
-        <input class="hidden-file" type="file" accept=".zxkjbb" @change="onImportFile"> 导入
+        <input ref="importFileInput" class="hidden-file" type="file" accept=".zxkjbb,.json" @change="onImportFile"> 导入
       </label>
       <button class="wb-btn" @click="exportBoard" title="导出">导出</button>
 
@@ -383,10 +383,15 @@
 import JSZip from 'jszip'
 export default {
   name: 'WhiteboardView',
+  emits: ['request-exit', 'autosave-updated'],
   props: {
     boardTitle: {
       type: String,
       default: 'Shared Draft'
+    },
+    autosaveKey: {
+      type: String,
+      default: 'zx-whiteboard-autosave'
     },
     performanceMode: {
       type: String,
@@ -533,9 +538,7 @@ export default {
       pressStartPoint: null,
       _pressStartScreen: null,
       undoStack: [],
-      redoStack: [],
-      autosaveKey: 'zx-whiteboard-autosave'
-      ,
+        redoStack: [],
   // one-shot guard to skip coverage expansion (used when snapping to 'see-all')
   _skipCoverageOnce: false,
       // HUD提示
@@ -681,6 +684,108 @@ export default {
     }
   },
   methods: {
+    openImportPicker() {
+      this.$refs.importFileInput?.click()
+    },
+    async importFile(file) {
+      if (!file) return
+      const buf = await file.arrayBuffer()
+      return this.importBoardBuffer(buf)
+    },
+    async importBoardBuffer(buf) {
+      const u8 = new Uint8Array(buf)
+      let payload = null
+      let importNotice = ''
+      let unresolvedImageCount = 0
+      const normalizePayload = (input)=>{
+        const normalized = input && typeof input === 'object' ? input : {}
+        const strokes = Array.isArray(normalized.strokes) ? normalized.strokes : []
+        normalized.strokes = strokes.map((stroke)=>{
+          if (!stroke || typeof stroke !== 'object') return stroke
+          const { _img, ...rest } = stroke
+          if (rest.type === 'image' && typeof rest.src === 'string' && rest.src.startsWith('blob:')) {
+            unresolvedImageCount += 1
+            return {
+              ...rest,
+              _importMissing: true,
+              _missingReason: '旧版导出未内嵌图片资源'
+            }
+          }
+          return rest
+        })
+        return normalized
+      }
+      const parseTextPayload = (source)=> {
+        const text = new TextDecoder().decode(source).trim()
+        return JSON.parse(text)
+      }
+      const isZip = u8.length >= 4 && u8[0] === 0x50 && u8[1] === 0x4B
+      if (!isZip) {
+        payload = parseTextPayload(buf)
+      } else {
+        try {
+          const zip = await JSZip.loadAsync(buf)
+          const jsonEntry = zip.file(/^(index|board|payload|whiteboard)\.json$/i)[0]
+            || zip.file(/\.json$/i)[0]
+          if (!jsonEntry) throw new Error('ZIP 内未找到清单 JSON')
+          const text = await jsonEntry.async('string')
+          payload = JSON.parse(text)
+          const assetFiles = zip.file(/\.(png|jpg|jpeg|webp)$/i)
+          const assetMap = {}
+          for (const af of assetFiles) {
+            const blob = await af.async('blob')
+            const url = URL.createObjectURL(blob)
+            const name = af.name.split('/').pop()
+            assetMap[name] = url
+            assetMap[af.name] = url
+          }
+          if (payload && payload.strokes && assetFiles.length) {
+            for (const s of (payload.strokes || [])) {
+              if (s && s.type === 'image' && s.src && typeof s.src === 'string') {
+                const key = s.src.split('/').pop()
+                if (assetMap[s.src]) s.src = assetMap[s.src]
+                else if (assetMap[key]) s.src = assetMap[key]
+              }
+            }
+          }
+        } catch (_) {
+          payload = parseTextPayload(buf)
+          importNotice = '已按旧版 JSON 草稿格式导入'
+        }
+      }
+      payload = normalizePayload(payload)
+      if (!(payload && payload.meta)) throw new Error('无效的白板数据')
+
+      this.width = payload.meta.width ?? this.width
+      this.height = payload.meta.height ?? this.height
+      this.bgColor = payload.meta.bgColor ?? this.bgColor
+      this.texture = payload.meta.texture ?? this.texture
+      this.rotation = payload.meta.rotation ?? this.rotation
+      this.scale = payload.meta.scale ?? this.scale
+      if (typeof payload.meta.panX === 'number') this.panX = payload.meta.panX
+      if (typeof payload.meta.panY === 'number') this.panY = payload.meta.panY
+      this.strokes = payload.strokes ?? []
+      this.clampLogicalSize(true)
+      this.resizeCanvas()
+      this._strokesDirty = true
+      this.redraw()
+      try {
+        requestAnimationFrame(()=>{ this._strokesDirty = true; this.redraw() })
+        setTimeout(()=>{ this._strokesDirty = true; this.redraw() }, 300)
+      } catch(_){ }
+      try { this.saveAutosave() } catch(_){ }
+      try {
+        this.embedAllExternalImages(true).then(()=>{
+          try { this._strokesDirty = true; this.redraw(); this.saveAutosave() } catch(_){ }
+        })
+      } catch(_){ }
+      if (unresolvedImageCount > 0) {
+        const msg = `已导入，但有 ${unresolvedImageCount} 张旧版 blob 图片无法恢复；旧文件没有内嵌图片资源。`
+        try { this.showHUD(msg, 2200) } catch(_){ try { alert(msg) } catch(__){} }
+      } else if (importNotice) {
+        try { this.showHUD(importNotice, 1400) } catch(_){ }
+      }
+    },
     async onPaste(e){
       try{
         const dt = e.clipboardData || (e.originalEvent && e.originalEvent.clipboardData)
@@ -1641,10 +1746,7 @@ export default {
     onPanHover(_) { /* reserved for future hover hint if needed */ },
     // Exit whiteboard: go back to previous page; fallback to home if no history
     exitWhiteboard() {
-      try {
-        if (window.history && window.history.length > 1) this.$router.back()
-        else this.$router.push('/')
-      } catch(e) { try { this.$router.push('/') } catch(_){} }
+      this.$emit('request-exit')
     },
     // Handle Ctrl + mouse wheel as zoom in/out for the canvas
     onCtrlWheel(e) {
@@ -2194,6 +2296,43 @@ export default {
       if (!stroke) return
       // image stroke: draw an embedded bitmap with placement box
       if (stroke.type === 'image' && stroke.box && stroke.src) {
+        if (stroke._importMissing) {
+          const b = stroke.box
+          const drawMissingPlaceholder = ()=>{
+            ctx.save()
+            if (typeof stroke.opacity === 'number') ctx.globalAlpha = Math.max(0.3, stroke.opacity)
+            ctx.fillStyle = 'rgba(255, 244, 229, 0.95)'
+            ctx.strokeStyle = 'rgba(217, 119, 6, 0.9)'
+            ctx.lineWidth = Math.max(2, Math.min(b.w, b.h) * 0.015)
+            if (ctx.setLineDash) ctx.setLineDash([10, 8])
+            ctx.fillRect(-b.w/2, -b.h/2, b.w, b.h)
+            ctx.strokeRect(-b.w/2, -b.h/2, b.w, b.h)
+            if (ctx.setLineDash) ctx.setLineDash([])
+            ctx.fillStyle = '#92400e'
+            const titleSize = Math.max(14, Math.min(28, Math.round(Math.min(b.w, b.h) * 0.12)))
+            const descSize = Math.max(11, Math.min(18, Math.round(titleSize * 0.62)))
+            ctx.textAlign = 'center'
+            ctx.textBaseline = 'middle'
+            ctx.font = `600 ${titleSize}px sans-serif`
+            ctx.fillText('旧版图片缺失', 0, -Math.min(12, titleSize * 0.4))
+            ctx.font = `400 ${descSize}px sans-serif`
+            ctx.fillText(stroke._missingReason || '导出时未内嵌资源', 0, Math.min(18, descSize * 1.4))
+            ctx.restore()
+          }
+          ctx.save()
+          if (stroke.angle) {
+            const cx = b.x + b.w/2
+            const cy = b.y + b.h/2
+            ctx.translate(cx, cy)
+            ctx.rotate((stroke.angle||0) * Math.PI / 180)
+            drawMissingPlaceholder()
+          } else {
+            ctx.translate(b.x + b.w/2, b.y + b.h/2)
+            drawMissingPlaceholder()
+          }
+          ctx.restore()
+          return
+        }
         let img = stroke._img
         if (!img) {
           img = new Image()
@@ -3328,6 +3467,7 @@ export default {
       const zip = new JSZip()
       const assetsDir = 'assets/images/'
       let imgIndex = 0
+      let unresolvedExportImages = 0
       const toImageBlob = (img, mime='image/png')=> new Promise((resolve)=>{
         try{
           const c = document.createElement('canvas'); c.width = img.naturalWidth || img.width; c.height = img.naturalHeight || img.height
@@ -3359,6 +3499,10 @@ export default {
       for (let i=0;i<manifest.strokes.length;i++){
         const s = manifest.strokes[i]
         if (s && s.type === 'image' && s.src && typeof s.src === 'string'){
+          if (s._importMissing) {
+            s.src = 'missing://legacy-image'
+            continue
+          }
           let imgObj = null
           try { imgObj = (strokesOut[i] && strokesOut[i]._img) ? strokesOut[i]._img : null } catch(_){ }
           if (!imgObj) imgObj = await ensureImage(s.src)
@@ -3375,7 +3519,15 @@ export default {
               s.src = fname
             }
           }
+          if (!String(s.src || '').startsWith(assetsDir) && !String(s.src || '').startsWith('data:')) {
+            unresolvedExportImages += 1
+          }
         }
+      }
+      if (unresolvedExportImages > 0) {
+        const msg = `导出已取消：有 ${unresolvedExportImages} 张图片未能打包进文件。请重新插入这些图片后再导出。`
+        try { this.showHUD(msg, 2400) } catch(_){ try { alert(msg) } catch(__){} }
+        return
       }
       // 3) add manifest json
       zip.file('board.json', JSON.stringify(manifest))
@@ -3384,93 +3536,21 @@ export default {
       const url = URL.createObjectURL(outBlob)
       const a = document.createElement('a')
       a.href = url
-      a.download = `whiteboard_${Date.now()}.zxkjbb`
+      const safeTitle = String(this.boardTitle || 'whiteboard').trim().replace(/[\\/:*?"<>|]+/g, '_').replace(/\s+/g, '-') || 'whiteboard'
+      a.download = `${safeTitle}_${Date.now()}.zxkjbb`
       a.click()
       URL.revokeObjectURL(url)
+      try { this.showHUD('导出完成', 1200) } catch(_){ }
     },
     async onImportFile(e) {
       const f = e.target.files && e.target.files[0]
       if (!f) return
-      const reader = new FileReader()
-      reader.onload = async (ev)=>{
-        try {
-          const buf = ev.target.result
-          const u8 = new Uint8Array(buf)
-          let payload = null
-          // Detect JSON vs ZIP (PK\x03\x04)
-          const isZip = u8.length >= 4 && u8[0] === 0x50 && u8[1] === 0x4B
-          if (!isZip) {
-            const text = new TextDecoder().decode(buf)
-            payload = JSON.parse(text)
-          } else {
-            // Try reading as zip: look for a JSON manifest and optional embedded images
-            const zip = await JSZip.loadAsync(buf)
-            // find a likely manifest json
-            const jsonEntry = zip.file(/^(index|board|payload|whiteboard)\.json$/i)[0]
-              || zip.file(/\.json$/i)[0]
-            if (!jsonEntry) throw new Error('ZIP 内未找到清单 JSON')
-            const text = await jsonEntry.async('string')
-            payload = JSON.parse(text)
-            // remap embedded image assets to blob URLs if any
-            const assetFiles = zip.file(/\.(png|jpg|jpeg|webp)$/i)
-            const assetMap = {}
-            for (const af of assetFiles) {
-              const blob = await af.async('blob')
-              const url = URL.createObjectURL(blob)
-              const name = af.name.split('/').pop()
-              assetMap[name] = url
-              assetMap[af.name] = url
-            }
-            if (payload && payload.strokes && assetFiles.length) {
-              for (const s of (payload.strokes||[])) {
-                if (s && s.type === 'image' && s.src && typeof s.src === 'string') {
-                  const key = s.src.split('/').pop()
-                  if (assetMap[s.src]) s.src = assetMap[s.src]
-                  else if (assetMap[key]) s.src = assetMap[key]
-                }
-              }
-            }
-          }
-          if (payload && payload.meta) {
-            // use nullish coalescing so falsy-but-valid values are preserved
-            this.width = payload.meta.width ?? this.width
-            this.height = payload.meta.height ?? this.height
-            this.bgColor = payload.meta.bgColor ?? this.bgColor
-            this.texture = payload.meta.texture ?? this.texture
-            this.rotation = payload.meta.rotation ?? this.rotation
-            this.scale = payload.meta.scale ?? this.scale
-            if (typeof payload.meta.panX === 'number') this.panX = payload.meta.panX
-            if (typeof payload.meta.panY === 'number') this.panY = payload.meta.panY
-            this.strokes = payload.strokes ?? []
-            // clamp imported logical size to current caps
-            this.clampLogicalSize(true)
-            this.resizeCanvas()
-            // force rebuild of strokes layer from imported strokes and paint immediately
-            this._strokesDirty = true
-            this.redraw()
-            // schedule follow-up repaints so async image strokes show once decoded
-            try {
-              requestAnimationFrame(()=>{ this._strokesDirty = true; this.redraw() })
-              setTimeout(()=>{ this._strokesDirty = true; this.redraw() }, 300)
-            } catch(_){ }
-            // 保存一次，确保刷新后可恢复
-            try { this.saveAutosave() } catch(_){ }
-            // 静默内嵌：导入后后台尝试将外部图片转为 dataURL，不打断流程
-            try {
-              this.embedAllExternalImages(true).then(()=>{
-                try { this._strokesDirty = true; this.redraw(); this.saveAutosave() } catch(_){ }
-              })
-            } catch(_){ }
-          } else {
-            throw new Error('无效的白板数据')
-          }
-        } catch (err) {
-          console.error('import failed', err)
-          alert('导入失败: 文件格式不受支持或已损坏')
-        }
+      try {
+        await this.importFile(f)
+      } catch (err) {
+        console.error('import failed', err)
+        alert('导入失败: 文件格式不受支持或已损坏')
       }
-      reader.readAsArrayBuffer(f)
-      // clear input
       e.target.value = null
     },
     // create a screenshot (PNG) of the current board
@@ -3623,6 +3703,12 @@ export default {
         }
         const payload = { meta, strokes: strokesOut, ...extra }
         localStorage.setItem(this.autosaveKey, JSON.stringify(payload))
+        this.$emit('autosave-updated', {
+          autosaveKey: this.autosaveKey,
+          strokeCount: strokesOut.length,
+          updatedAt: Date.now(),
+          hasPastePreview: !!extra.paste
+        })
       } catch (e) { console.error('autosave failed', e) }
     },
     loadAutosave() {
