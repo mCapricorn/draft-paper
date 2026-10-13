@@ -2,70 +2,87 @@ English version: [README.en.md](README.en.md)
 
 # Draft Paper
 
-这是一个独立的在线草稿纸项目，目标是提供一个轻量、可公开发布、单人使用的电子白板/草稿工具。
+[中文](README.zh-CN.md) | English
 
-当前版本已经从“单页白板原型”推进到“带工作台的单人草稿纸应用”：
+Draft Paper is a lightweight single-user online sketch/draft board built as a Vite + Vue app. The repository is intentionally front-end only: it stores draft data in the browser, supports multiple local drafts, and keeps the editing flow fully local without a backend or account system.
 
-- 进入应用后可在工作台创建、继续和管理多份本地草稿
-- 每份草稿拥有独立的本地 autosave 存储键
-- 支持从旧版单草稿本地缓存迁移到新的多草稿结构
-- 保留白板内的自动保存、截图、导入导出与形状优化能力
+This documentation matches the current implementation in the repo rather than an older prototype description.
 
-## 项目定位
+## What the app does now
 
-- 不包含多人协作功能
-- 以单人在线草稿纸为核心
-- 保持简单、稳定、可直接用于个人记录、快速构思和手写草图
+- Workbench with a list of recent drafts and a way to create or resume local drafts
+- Multiple draft records, each with its own autosave key in browser storage
+- Import and export of draft files (`.zxkjbb` and legacy `.json` data)
+- Whiteboard editing with drawing, erasing, pan, zoom, rotate, undo/redo, and screenshot capture
+- Performance mode switch for high-volume handwriting or large-area sketching
+- Browser locale selection (`zh-CN` / `en-US`) and local persistence of app state
 
-## 已完成的改造
+## Actual repo workflow
 
-- 从主工程中抽离画板核心代码，保留独立运行能力
-- 创建 GitHub public 仓库：https://github.com/mCapricorn/draft-paper
-- 增加草稿名与性能模式入口，适合个人使用场景
-- 保留本地恢复、导入导出与截图能力
+The project is configured as a Vite app in `package.json` and `vite.config.js`:
 
-## Features
+- `npm install`
+- `npm run dev` starts the dev server
+- `npm run build` creates a production build in `dist/`
+- `npm run preview` serves the built app locally
+- The dev server is configured for `host: '0.0.0.0'` and port `5173`
 
-- 工作台首页与最近草稿列表
-- 多草稿本地管理
-- 画布绘制与橡皮擦
-- 缩放 / 平移 / 旋转
-- 撤销与重做
-- 笔迹识别与形状优化
-- 导入导出
-- 自动保存
-- 截图导出
-- 高性能模式：在大面积书写时降低复杂重绘并减少接缝细节处理
+This reflects the repo’s current scripts and config; there is no separate backend, deploy script, or cloud-sync service in the project.
 
-## 使用方式
-
-1. 打开应用后，在工作台点击“新建草稿”开始书写。
-2. 编辑过程中内容会自动保存到浏览器本地。
-3. 返回工作台后，可从“最近草稿”继续进入任意草稿。
-4. 需要长期备份时，使用白板右侧的导出功能保存 `.zxkjbb` 文件。
-5. 如果之前使用过旧版单草稿缓存，工作台会提供“恢复旧版本地草稿”入口。
-
-## Quick Start
+## Quick start
 
 ```bash
 npm install
 npm run dev
 ```
 
-## Build
+Then open the app in the browser at:
+
+- `http://localhost:5173`
+
+## Production build
 
 ```bash
 npm run build
 ```
 
-## Performance notes
+Optional local preview after building:
 
-- 通过 coalesced redraw 和离屏绘制层控制，减少高频输入时的无效重绘。
-- 在高性能模式下降低形状简化阈值和接缝细节，以提升大面积书写时的响应速度。
-- 当前版本聚焦单人草稿纸体验，不引入多人协作与实时同步功能。
+```bash
+npm run preview
+```
 
-## Data scope
+## Data and storage model
 
-- 当前版本是纯前端、本地模式，不包含账号、云端同步和多人协作。
-- 草稿数据默认保存在当前浏览器本地存储中，清理浏览器站点数据后会丢失。
-- 如需长期保留，请定期导出草稿文件。
+The app is intentionally local-only:
+
+- App and draft metadata are stored in `localStorage`
+- Each draft has its own autosave key under the browser storage, managed from `src/App.vue`
+- The board state and export/import logic are handled in `src/components/WhiteboardView.vue`
+- Drafts are not synced to a remote server or user account
+
+If you want long-term backup, export the board as a `.zxkjbb` file from the editor UI. Imported files may be `.zxkjbb` or older JSON draft data.
+
+## Suggested development workflow
+
+1. Install dependencies with `npm install`.
+2. Start the app with `npm run dev` for active development.
+3. Validate changes with `npm run build` before finalizing a version.
+4. Use `npm run preview` only to inspect the built bundle locally.
+
+## Repository structure
+
+- `src/App.vue` — workbench, recent drafts, locale toggle, draft state management
+- `src/components/WhiteboardView.vue` — board interactions, drawing, export/import, autosave, screenshot, performance settings
+- `vite.config.js` — Vite dev server configuration
+- `index.html` — app entry HTML
+- `package.json` — scripts and dependencies for the project
+
+## Project scope
+
+This repository focuses on a single-user local sketching workflow. It does not include multi-user collaboration, cloud sync, or accounts.
+
+## Language
+
+- [中文](README.zh-CN.md)
+- English
